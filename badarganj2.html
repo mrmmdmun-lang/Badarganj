@@ -1,0 +1,447 @@
+
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বদরগঞ্জ তরুণ মঞ্চ - রক্তদান ও সেবামূলক প্ল্যাটফর্ম</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Hind Siliguri for Bengali) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Dynamic Web Manifest for PWA Support -->
+    <script>
+        const manifestData = {
+            "name": "বদরগঞ্জ তরুণ মঞ্চ",
+            "short_name": "তরুণ মঞ্চ",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#e11d48",
+            "icons": [
+                {
+                    "src": "https://img.icons8.com/emoji/192/drop-of-blood-emoji.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "https://img.icons8.com/emoji/512/drop-of-blood-emoji.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
+    </script>
+
+    <style>
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .custom-glass {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+
+    <!-- Import Map for Firebase JS SDK v10 -->
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js",
+        "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js"
+      }
+    }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-rose-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-50 custom-glass shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-full bg-rose-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-rose-600/40">
+                    <i class="fa-solid font-bold fa-droplet"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg md:text-xl text-rose-500 leading-tight">বদরগঞ্জ তরুণ মঞ্চ</h1>
+                    <p class="text-xs text-slate-400">রক্তদান ও সামাজিক সেবা সংগঠন</p>
+                </div>
+            </div>
+
+            <!-- Install App Button -->
+            <button id="installAppBtn" class="hidden bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-all duration-300 shadow-lg shadow-rose-600/30 flex items-center gap-2">
+                <i class="fa-solid fa-download"></i>
+                <span>অ্যাপ ইনস্টল করুন</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- PWA Install Banner Popup for mobile -->
+    <div id="installBanner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 custom-glass p-4 rounded-2xl z-50 border border-rose-500/30 shadow-2xl">
+        <div class="flex items-start justify-between">
+            <div class="flex gap-3">
+                <div class="p-3 bg-rose-600/20 text-rose-500 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-100">অ্যাপটি ফোনে ডাউনলোড করুন</h4>
+                    <p class="text-xs text-slate-400 mt-1">সহজে রক্তদাতা খুঁজতে আপনার ফোনে অ্যাপ হিসেবে হোমস্ক্রিনে যুক্ত করুন।</p>
+                </div>
+            </div>
+            <button id="closeBannerBtn" class="text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <button id="bannerInstallBtn" class="w-full mt-3 bg-rose-600 hover:bg-rose-500 text-white py-2 rounded-xl text-sm font-semibold transition shadow">
+            এখনই ইনস্টল করুন
+        </button>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full space-y-8">
+        
+        <!-- Hero Section -->
+        <section class="text-center py-8 px-4 rounded-3xl bg-gradient-to-b from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/10">
+            <span class="inline-block px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 text-xs font-semibold mb-3 border border-rose-500/20">
+                ❤️ রক্তদানে বাঁচুক জীবন
+            </span>
+            <h2 class="text-2xl md:text-4xl font-extrabold text-slate-100 max-w-2xl mx-auto leading-tight">
+                বদরগঞ্জের যেকোনো জরুরি প্রয়োজনে রক্তদাতা খুঁজুন ও যুক্ত হোন
+            </h2>
+            <p class="text-slate-400 text-sm md:text-base mt-2 max-w-xl mx-auto">
+                আপনিও একজন স্বেচ্ছাসেবী রক্তদাতা হিসেবে নাম নিবন্ধিত করে যেকোনো মুমূর্ষু রোগীর পাশে দাঁড়াতে পারেন।
+            </p>
+            <div class="mt-6 flex flex-wrap gap-4 justify-center">
+                <a href="#register" class="bg-rose-600 hover:bg-rose-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-rose-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>রক্তদাতা হোন</span>
+                </a>
+                <a href="#donors" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold px-6 py-2.5 rounded-xl text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-search"></i>
+                    <span>রক্তদাতা খুঁজুন</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Donor Search Section -->
+        <section id="donors" class="space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-rose-500"></i>
+                        রক্তদাতাদের তালিকা
+                    </h3>
+                    <p class="text-xs text-slate-400">গ্রুপ নির্বাচন করে কাঙ্ক্ষিত রক্তদাতার সাথে যোগাযোগ করুন</p>
+                </div>
+
+                <!-- Blood Group Filters -->
+                <div class="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                    <div class="flex gap-2 min-w-max" id="bloodFilterContainer">
+                        <button class="blood-filter active bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-group="ALL">সকল</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="A+">A+</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="A-">A-</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="B+">B+</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="B-">B-</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="O+">O+</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="O-">O-</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="AB+">AB+</button>
+                        <button class="blood-filter bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-slate-700" data-group="AB-">AB-</button>
+                    </div>
+                </div>
+            </div>
+       <!-- Donor List Cards -->
+            <div id="donorList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Loading Skeleton / Dynamic content -->
+                <div class="col-span-full py-12 text-center text-slate-400">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl text-rose-500 mb-2"></i>
+                    <p>রক্তদাতাদের তথ্য লোড হচ্ছে...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Donor Registration Form -->
+        <section id="register" class="custom-glass p-6 md:p-8 rounded-3xl border border-slate-800 max-w-2xl mx-auto space-y-6">
+            <div class="text-center space-y-1">
+                <div class="inline-flex p-3 bg-rose-600/10 text-rose-500 rounded-full mb-1">
+                    <i class="fa-solid fa-hand-holding-medical text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-100">রক্তদাতা হিসেবে নিবন্ধন করুন</h3>
+                <p class="text-xs text-slate-400">আপনার সঠিক তথ্য প্রদান করে রক্তদানে ইচ্ছুক হোন</p>
+            </div>
+
+            <form id="donorForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Name -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">আপনার নাম *</label>
+                        <input type="text" id="name" required placeholder="যেমন: মো: রফিকুল ইসলাম" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+                    </div>
+
+                    <!-- Blood Group -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">রক্তের গ্রুপ *</label>
+                        <select id="bloodGroup" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+                            <option value="">গ্রুপ নির্বাচন করুন</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">মোবাইল নম্বর *</label>
+                        <input type="tel" id="phone" required placeholder="017XXXXXXXX" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+                    </div>
+
+                    <!-- Location / Area -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">এলাকা/ইউনিয়ন (বদরগঞ্জ) *</label>
+                        <input type="text" id="location" required placeholder="যেমন: দামোদরপুর, বদরগঞ্জ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+                    </div>
+                </div>
+
+                <!-- Last Donation Date -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">সর্বশেষ রক্তদানের তারিখ (ঐচ্ছিক)</label>
+                    <input type="date" id="lastDonation" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-rose-600/30 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>নিবন্ধন জমা দিন</span>
+                </button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="custom-glass border-t border-slate-800 mt-12 py-6">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
+            <p class="text-sm font-semibold text-rose-500">বদরগঞ্জ তরুণ মঞ্চ © 2026</p>
+            <p class="text-xs text-slate-500">মানবতার সেবায় আমরা সর্বদা অঙ্গীকারবদ্ধ</p>
+        </div>
+    </footer>
+
+    <!-- Firebase App Script module -->
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyC1xq25s8zVDYeuYF1MdxaQDel5bw-rHk4",
+          authDomain: "badarganj-a9a2b.firebaseapp.com",
+          projectId: "badarganj-a9a2b",
+          storageBucket: "badarganj-a9a2b.firebasestorage.app",
+          messagingSenderId: "412514177086",
+          appId: "1:412514177086:web:c41ee567ad4eb0f3cfc16f",
+          measurementId: "G-TFSBE62DEQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // Local state for filtering
+        let currentFilter = 'ALL';
+        let allDonors = [];
+
+        // DOM Elements
+        const donorForm = document.getElementById('donorForm');
+        const donorList = document.getElementById('donorList');
+        const filterButtons = document.querySelectorAll('.blood-filter');
+
+        // Real-time Firestore Listener
+        const donorsRef = collection(db, "donors");
+        
+        onSnapshot(donorsRef, (snapshot) => {
+            allDonors = [];
+            snapshot.forEach((doc) => {
+                allDonors.push({ id: doc.id, ...doc.data() });
+            });
+            renderDonors();
+        }, (error) => {
+            console.error("Firestore Error: ", error);
+            donorList.innerHTML = `
+                <div class="col-span-full py-8 text-center text-amber-400 bg-slate-900/50 rounded-2xl border border-amber-500/20">
+                    <i class="fa-solid fa-triangle-exclamation text-xl mb-1"></i>
+                    <p class="text-sm">ডেটাবেজ সংযোগে সমস্যা হয়েছে অথবা কোনো তথ্য জমা নেই।</p>
+                </div>
+            `;
+        });
+
+        // Render Donors to UI
+        function renderDonors() {
+            const filtered = currentFilter === 'ALL' 
+                ? allDonors 
+                : allDonors.filter(d => d.bloodGroup === currentFilter);
+
+            if (filtered.length === 0) {
+                donorList.innerHTML = `
+                    <div class="col-span-full py-10 text-center text-slate-400 bg-slate-900/50 rounded-2xl border border-slate-800">
+                        <p class="text-sm">কোনো রক্তদাতার তথ্য পাওয়া যায়নি।</p>
+                    </div>
+                `;
+                return;
+            }
+
+            donorList.innerHTML = filtered.map(donor => `
+                <div class="custom-glass p-4 rounded-2xl border border-slate-800 hover:border-rose-500/30 transition duration-300 flex items-start justify-between">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-slate-100 text-base">${escapeHtml(donor.name)}</h4>
+                        </div>
+                        <p class="text-xs text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-rose-500"></i>
+                            ${escapeHtml(donor.location || 'বদরগঞ্জ')}
+                        </p>
+                        ${donor.lastDonation ? `
+                            <p class="text-xs text-slate-500 flex items-center gap-1.5">
+                                <i class="fa-regular fa-calendar-check text-slate-400"></i>
+                                শেষ রক্তদান: ${escapeHtml(donor.lastDonation)}
+                            </p>
+                        ` : ''}
+                        <div class="pt-2">
+                            <a href="tel:${escapeHtml(donor.phone)}" class="inline-flex items-center gap-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                                <i class="fa-solid fa-phone"></i>
+                                <span>${escapeHtml(donor.phone)}</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 bg-rose-600/20 text-rose-500 rounded-2xl flex items-center justify-center font-black text-lg border border-rose-500/30 shrink-0">
+                        ${escapeHtml(donor.bloodGroup)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Form Submit Handler
+        donorForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>জমা হচ্ছে...</span>`;
+
+            try {
+                await addDoc(collection(db, "donors"), {
+                    name: document.getElementById('name').value,
+                    bloodGroup: document.getElementById('bloodGroup').value,
+                    phone: document.getElementById('phone').value,
+                    location: document.getElementById('location').value,
+                    lastDonation: document.getElementById('lastDonation').value || null,
+                    createdAt: new Date().toISOString()
+                });
+
+                alert("সফলভাবে তথ্য সংরক্ষিত হয়েছে! ধন্যবাদ।");
+                donorForm.reset();
+            } catch (err) {
+                console.error("Save error: ", err);
+                alert("তথ্য সংরক্ষণ করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i><span>নিবন্ধন জমা দিন</span>`;
+            }
+        });
+
+        // Filter Click Handlers
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterButtons.forEach(b => {
+                    b.classList.remove('active', 'bg-rose-600', 'text-white');
+                    b.classList.add('bg-slate-800', 'text-slate-300');
+                });
+                btn.classList.add('active', 'bg-rose-600', 'text-white');
+                btn.classList.remove('bg-slate-800', 'text-slate-300');
+                
+                currentFilter = btn.getAttribute('data-group');
+                renderDonors();
+            });
+        });
+
+        // Helper string escape
+        function escapeHtml(str) {
+            if(!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+
+    <!-- PWA Install Prompt Script & Service Worker -->
+    <script>
+        let deferredPrompt;
+        const installAppBtn = document.getElementById('installAppBtn');
+        const installBanner = document.getElementById('installBanner');
+        const bannerInstallBtn = document.getElementById('bannerInstallBtn');
+        const closeBannerBtn = document.getElementById('closeBannerBtn');
+
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show installation triggers
+            installAppBtn.classList.remove('hidden');
+            installBanner.classList.remove('hidden');
+        });
+
+        async function triggerInstall() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('App installed by user');
+            }
+            deferredPrompt = null;
+            installAppBtn.classList.add('hidden');
+            installBanner.classList.add('hidden');
+        }
+
+        installAppBtn?.addEventListener('click', triggerInstall);
+        bannerInstallBtn?.addEventListener('click', triggerInstall);
+
+        closeBannerBtn?.addEventListener('click', () => {
+            installBanner.classList.add('hidden');
+        });
+
+        // Register dummy inline service worker for PWA support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swContent = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => self.clients.claim());
+                    self.addEventListener('fetch', (e) => {
+                        // Pass-through fetch handler for PWA compatibility
+                    });
+                `;
+                const blob = new Blob([swContent], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration note:', err));
+            });
+        }
+    </script>
+</body>
+</html>
